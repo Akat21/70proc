@@ -19,4 +19,11 @@ class OpinionController extends AbstractController
             '<html><body>Home Page</body></html>'
         );
     }
+
+    #[Route('/opinion')]
+    public function opinion(): Response
+    {
+        return $this->render('opinion/opinion.html.twig');
+
+    }
 }

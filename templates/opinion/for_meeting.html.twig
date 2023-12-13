@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <h1>Jak oceniasz {{ meeting.name }} {{ meeting.start | date('d.m.Y H:i') }} </h1>
+    <div class="emoji_container">
+        {{ form(form) }}
+    </div>
+    <script>
+        // Mapowanie wartości na emotki lub tekst
+        function mapScoreToEmoji(score) {
+            switch (score) {
+                case '-1':
+                    return '😒'; // Emotka lub tekst dla -1
+                case '0':
+                    return '😐'; // Emotka lub tekst dla 0
+                case '1':
+                    return '😁'; // Emotka lub tekst dla 1
+                default:
+                    return ''; // Domyślna wartość (brak emotki lub tekstu)
+            }
+        }
+
+        function toggleInfoField() {
+            var scoreChoices = document.querySelectorAll('input[name="opinion[score]"]');
+            var infoField = document.querySelector('.info-field');
+            var submitButton = document.querySelector('.submit-button');
+            var selectedEmoji = document.getElementById('selectedEmoji');
+
+            // Sprawdź, czy którykolwiek z wyborów jest zaznaczony
+            var isAnyScoreSelected = Array.from(scoreChoices).some(function(choice) {
+                return choice.checked;
+            });
+
+            if (isAnyScoreSelected) {
+                // Ukryj wszystkie opcje wyboru
+                scoreChoices.forEach(function(choice) {
+                    choice.parentNode.style.display = 'none';
+                });
+
+                // Pokaż pole 'info' i przycisk submit
+                infoField.style.display = 'flex';
+                submitButton.style.display = 'flex';
+
+                // Pobierz wartość wybranej emotki
+                var selectedScore = document.querySelector('input[name="opinion[score]"]:checked').value;
+                var selectedEmojiValue = mapScoreToEmoji(selectedScore);
+
+                // Przypisz placeholder z wybraną emotką do pola 'info'
+                infoField.setAttribute('placeholder', 'Tu wpisz opinię ' + selectedEmojiValue);
+
+                // Pokaż wybraną emotkę lub tekst
+                selectedEmoji.innerHTML = selectedEmojiValue;
+                selectedEmoji.style.display = 'flex';
+            } else {
+                // Jeśli żadna opcja nie jest zaznaczona, pokaż wszystkie opcje wyboru
+                scoreChoices.forEach(function(choice) {
+                    choice.parentNode.style.display = 'flex';
+                });
+
+                // Ukryj pole 'info' i przycisk submit
+                infoField.style.display = 'none';
+                submitButton.style.display = 'none';
+
+                // Ukryj wybraną emotkę lub tekst
+                selectedEmoji.style.display = 'none';
+
+                // Przywróć domyślny placeholder do pola 'info'
+                infoField.setAttribute('placeholder', 'Tu wpisz opinię');
+            }
+        }
+    </script>
+
+
+
+    <style>
+    h1 {
+        font-size: 4.5rem;
+        font-family: 'Anton', sans-serif;
+        display: flex;
+        justify-content: center;
+        text-align: center;
+    }
+    body{
+        background-color: #fad1d1;
+        color: #333;
+    }
+    .submit-button{
+        display: none;
+        background-color:yellow;
+        justify-content: center;
+        text-align: center;
+
+    }
+    .info-field{
+        display: none;
+        height: 10rem;
+        width: 30rem;
+
+    }
+    input[type="radio"] {
+        display:none;
+    }
+
+    .form-check{
+        padding-left: 0.2em;
+    }
+
+    .mb-3{
+        display: flex;
+        justify-content: center;
+    }
+    .my-custom-class {
+        display: flex;
+        justify-content: center;
+        padding: 0;
+        border: none;
+        background: none;
+        font-size: 20rem;
+    }
+    .emoji_container {
+        display: flex;
+        justify-content: center;
+    }
+
+
+    @media screen and (max-width: 600px) {
+        h1{
+            font-size: 3rem;
+        }
+
+        .my-custom-class{
+            display:flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 10rem;
+        }
+        .form-check {
+            padding-left: 0;
+        }
+        .info-field{
+            width: 20rem;
+        }
+    }
+</style>
+
+
+{% endblock %}

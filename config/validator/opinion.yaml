@@ -1,0 +1,8 @@
+App\Entity\Opinion:
+  properties:
+    score:
+      - NotNull:
+          groups: [express]
+      - Choice:
+          choices: [-1, 0, 1]
+          groups: [express]

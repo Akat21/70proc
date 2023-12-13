@@ -3,3 +3,11 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+generuj_raport:
+    path: '/generuj-raport'
+    controller: 'App\Controller\RaportController::generujRaport'
+room_controller:
+    path: /{building}/{number}
+    controller: App\Controller\QRController::redirectToRoom
+    requirements:
+        number: \d+

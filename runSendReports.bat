@@ -1,0 +1,1 @@
+php D:\Projekty\70pro\bin\console generateAndSendReports

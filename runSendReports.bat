@@ -1,1 +1,1 @@
-php D:\Projekty\70pro\bin\console generateAndSendReports
+php %__CD__%bin\console generateAndSendReports

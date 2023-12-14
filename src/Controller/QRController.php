@@ -10,6 +10,7 @@ class QRController extends AbstractController
 {
     public function redirectToRoom(Request $request, $number, $building)
     {
+        date_default_timezone_set('Europe/Warsaw');
         // Pobierz aktualną datę
         $currentDate = date('Y-m-d');
         // Pobierz aktualną godzinę

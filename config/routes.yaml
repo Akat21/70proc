@@ -4,7 +4,7 @@ controllers:
         namespace: App\Controller
     type: attribute
 generuj_raport:
-    path: '/generuj-raport'
+    path: '/generuj-raport/{number}'
     controller: 'App\Controller\RaportController::generujRaport'
 room_controller:
     path: /{building}/{number}

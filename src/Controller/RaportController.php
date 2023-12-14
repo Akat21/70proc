@@ -14,16 +14,23 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class RaportController extends AbstractController
 {
-    public function generujRaport(EntityManagerInterface $entityManager, Connection $connection): Response
+    public function generujRaport(EntityManagerInterface $entityManager, Connection $connection, $number): Response
     {
         // Pobierz dane z tabeli meeting
-        $meetings = $connection->fetchAllAssociative('SELECT * FROM meeting');
-        // Pobierz dane z tabeli opinion
-        $opinions = $entityManager->getRepository(Opinion::class)->findAll();
+        $currentDateTime = new \DateTime();
+        $currentDateTime->modify('-2 hour -30 minutes');
 
-        // Przygotuj dane do raportu
+        $meetings = $connection->fetchAllAssociative('SELECT * FROM meeting WHERE start >= :currentDateTime AND SUBSTRING(room, -3) = :number ORDER BY start DESC', [
+            'currentDateTime' => $currentDateTime->format('Y-m-d H:i:s'),
+            'number' => $number
+        ]);
+        
         $raportData = [];
+        // Pobierz dane z tabeli opinion
         foreach ($meetings as $meeting) {
+            $opinions = $entityManager->getRepository(Opinion::class)->findBy(['meeting' => $meeting['id']]);
+            
+            // Przygotuj dane do raportu
             $raportData[] = [
                 'data' => $meeting['start'],
                 'nazwa_zajec' => $meeting['name'],
@@ -36,6 +43,7 @@ class RaportController extends AbstractController
                 'opinie_tekstowe' => $this->getOpinieTekstowe($opinions),
             ];
         }
+
 
         // Utwórz nowy arkusz kalkulacyjny
         $spreadsheet = new Spreadsheet();

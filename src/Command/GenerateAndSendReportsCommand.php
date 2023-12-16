@@ -2,48 +2,47 @@
 
 namespace App\Command;
 
+use App\Controller\EmailController;
+use App\Controller\RaportController;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'generateAndSendReports',
-    description: 'Add a short description for your command',
+    description: 'This command is called every 15 minutes to check if there is any report to send',
 )]
 class GenerateAndSendReportsCommand extends Command
 {
-    public function __construct()
+
+    private $emailController;
+    private $raportController;
+
+    public function __construct(EmailController $emailController, RaportController $raportController)
     {
         parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this
-            ->addArgument('arg1', InputArgument::OPTIONAL, 'Argument description')
-            ->addOption('option1', null, InputOption::VALUE_NONE, 'Option description')
-        ;
+        $this->emailController = $emailController;
+        $this->raportController = $raportController;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-        $arg1 = $input->getArgument('arg1');
-
-        if ($arg1) {
-            $io->note(sprintf('You passed an argument: %s', $arg1));
-        }
-
-        if ($input->getOption('option1')) {
-            // ...
-        }
-
-        $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
         echo 'test';
+        date_default_timezone_set('Europe/Warsaw');
+        $currentDateTime = new \DateTime("now");
+
+        $reports = $this->raportController->generujRaporty();
+        $sheets = $reports['reports'];
+        $teachers = $reports['teachers'];
+
+        for ($i = 0; $i < count($teachers); $i++) {
+            $this->emailController->sendEmail(
+                file: $sheets[$i]
+            );
+        }
+
         return Command::SUCCESS;
     }
 }
+

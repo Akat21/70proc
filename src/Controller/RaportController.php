@@ -14,21 +14,30 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class RaportController extends AbstractController
 {
-    public function generujRaport(EntityManagerInterface $entityManager, Connection $connection, $number): Response
-    {
-        // Pobierz dane z tabeli meeting
-        $currentDateTime = new \DateTime();
-        $currentDateTime->modify('-2 hour -30 minutes');
 
-        $meetings = $connection->fetchAllAssociative('SELECT * FROM meeting WHERE start >= :currentDateTime AND SUBSTRING(room, -3) = :number ORDER BY start DESC', [
-            'currentDateTime' => $currentDateTime->format('Y-m-d H:i:s'),
-            'number' => $number
-        ]);
+    private $entityManager;
+    private $connection;
+
+    public function __construct(EntityManagerInterface $entityManager, Connection $connection)
+    {
+        $this->entityManager = $entityManager;
+        $this->connection = $connection;
+    }
+
+    public function generujRaport($number, $start): Response
+    {
+        $meetings = $this->connection->fetchAllAssociative(
+            'SELECT * FROM meeting WHERE start == :start AND SUBSTRING(room, -3) = :room ORDER BY start DESC'
+            , [
+                'room' => $number,
+                'start' => $start
+            ]
+        );
         
         $raportData = [];
         // Pobierz dane z tabeli opinion
         foreach ($meetings as $meeting) {
-            $opinions = $entityManager->getRepository(Opinion::class)->findBy(['meeting' => $meeting['id']]);
+            $opinions = $this->entityManager->getRepository(Opinion::class)->findBy(['meeting' => $meeting['id']]);
             
             // Przygotuj dane do raportu
             $raportData[] = [
@@ -90,6 +99,73 @@ class RaportController extends AbstractController
         return $response;
     }
 
+    public function generujRaporty()
+    {
+        date_default_timezone_set('Europe/Warsaw');
+        $currentDateTime = new \DateTime("now");
+
+        $meetings = $this->connection->fetchAllAssociative('SELECT * FROM meeting WHERE stop beetween :time1 and :time2 ORDER BY start DESC', [
+            'time1' => $currentDateTime->modify('-10 minutes')->format('Y-m-d H:i:s'),
+            'time2' => $currentDateTime->modify('+10 minutes')->format('Y-m-d H:i:s'),
+        ]);
+
+        $raportData = [];
+        $teachers = [];
+
+        foreach ($meetings as $meeting) {
+            $opinions = $this->entityManager->getRepository(Opinion::class)->findBy(['meeting' => $meeting['id']]);
+
+            $teachers[] = $meeting['teacher'];
+            // Przygotuj dane do raportu
+            $raportData[] = [
+                'data' => $meeting['start'],
+                'nazwa_zajec' => $meeting['name'],
+                'prowadzacy' => $meeting['teacher'],
+                'sala' => $meeting['room'],
+                'ocena_ogolna' => $this->obliczSredniaOcene($opinions),
+                'ocena_semestralna' => $this->obliczSredniaOceneSemestralna($opinions),
+                'ocena_zajec' => $this->obliczSredniaOceneZajec($opinions),
+                'porownanie_poprzednich' => $this->porownajOcenyPoprzednich($opinions),
+                'opinie_tekstowe' => $this->getOpinieTekstowe($opinions),
+            ];
+        }
+
+        $sheets = [];
+
+        foreach ($raportData as $data) {
+            // Utwórz nowy arkusz kalkulacyjny
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $sheet->setCellValue('A1', 'Data');
+            $sheet->setCellValue('B1', 'Nazwa Zajęć');
+            $sheet->setCellValue('C1', 'Prowadzący');
+            $sheet->setCellValue('D1', 'Sala');
+            $sheet->setCellValue('E1', 'Ocena Ogólna');
+            $sheet->setCellValue('F1', 'Ocena Semestralna');
+            $sheet->setCellValue('G1', 'Ocena z Zajęć');
+            $sheet->setCellValue('H1', 'Porównanie z Poprzednimi');
+            $sheet->setCellValue('I1', 'Opinie Tekstowe');
+            
+            $sheet->setCellValue('A' . 2, $data['data']);
+            $sheet->setCellValue('B' . 2, $data['nazwa_zajec']);
+            $sheet->setCellValue('C' . 2, $data['prowadzacy']);
+            $sheet->setCellValue('D' . 2, $data['sala']);
+            $sheet->setCellValue('E' . 2, $data['ocena_ogolna']);
+            $sheet->setCellValue('F' . 2, $data['ocena_semestralna']);
+            $sheet->setCellValue('G' . 2, $data['ocena_zajec']);
+            $sheet->setCellValue('H' . 2, $data['porownanie_poprzednich']);
+            $sheet->setCellValue('I' . 2, $data['opinie_tekstowe']);
+
+            $xlsxFilePath = tempnam(sys_get_temp_dir(), 'raport') . '.xlsx';
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($xlsxFilePath);
+
+            $sheets[] = $xlsxFilePath;
+        }
+
+        return ['reports' => $sheets, 'teachers' => $teachers];
+    }
 
     private function obliczSredniaOcene(array $opinions): float
     {
@@ -179,7 +255,7 @@ class RaportController extends AbstractController
         // Przykładowa implementacja pobierania opinii tekstowych
         // (analogicznie dostosuj funkcje poniżej do swoich potrzeb)
         $opinionsText = array_map(function ($opinion) {
-            return $opinion->getInfo();
+            return $opinion->getInfo() . " ";
         }, $opinions);
 
         return implode("\n", $opinionsText);

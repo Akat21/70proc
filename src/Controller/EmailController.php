@@ -28,7 +28,7 @@ class EmailController extends AbstractController
     {
         // $file to path do pliku względem main directory projektu
         // zamienianie na absolute path
-        $absPath = realpath($this->getParameter('kernel.project_dir') . '/' . $file);
+//        $absPath = realpath($this->getParameter('kernel.project_dir') . '/' . $file);
 
         $email = (new Email())
             ->from('testai70test@gmail.com')
@@ -37,7 +37,7 @@ class EmailController extends AbstractController
             ->text($text); // info o lekcji i dacie | text jest potrzebny w przypadku braku pliku inaczej sie wysadzi |
 
         if ($file) {
-            $email->attachFromPath($absPath);
+            $email->attachFromPath($file);
         }
 
         try {

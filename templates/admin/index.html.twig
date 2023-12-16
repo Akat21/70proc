@@ -19,7 +19,7 @@
             <div>Sala: {{ meeting.room }}    </div>
             <div>Start: {{ meeting.start|date('Y-m-d H:i:s') }} </div>
             <div>Koniec: {{ meeting.stop|date('Y-m-d H:i:s') }}  </div>
-            <button><a href="/generuj-raport">Pobierz Raport</a></button>
+            <button><a href="{{ '/generuj-raport/' ~ meeting.room|slice(8) ~ '/' ~ meeting.start|date('Y-m-d H:i:s')}}">Pobierz Raport</a></button>
         </div>
     {% endfor %}
 

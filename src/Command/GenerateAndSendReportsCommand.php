@@ -28,21 +28,28 @@ class GenerateAndSendReportsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        echo 'test';
-        date_default_timezone_set('Europe/Warsaw');
-        $currentDateTime = new \DateTime("now");
-
         $reports = $this->raportController->generujRaporty();
         $sheets = $reports['reports'];
         $teachers = $reports['teachers'];
 
         for ($i = 0; $i < count($teachers); $i++) {
             $this->emailController->sendEmail(
-                file: $sheets[$i]
+//                $this->createTeacherEmail($teachers[$i]),
+                "testai70test@gmail.com".
+                "Raport z zajęć",
+                "",
+                $sheets[$i]
             );
         }
 
         return Command::SUCCESS;
+    }
+
+    private function createTeacherEmail(string $teacherName): string
+    {
+        $preparedName = str_replace(' ', '.', strtolower($teacherName));
+
+        return $preparedName . '@zut.edu.pl';
     }
 }
 

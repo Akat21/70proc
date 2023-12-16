@@ -24,11 +24,8 @@ class EmailController extends AbstractController
 
     // do zrobienia auto wysylanie, nie przez link
     #[Route('/email')]
-    public function sendEmail($to = 'testai70test@gmail.com', $subject = 'Raport', $text = 'data i lekcja', $file = '') : Response
+    public function sendEmail($to = 'testai70test@gmail.com', $subject = 'Raport', $text = 'data i lekcja', $file = '') : void
     {
-        // $file to path do pliku względem main directory projektu
-        // zamienianie na absolute path
-//        $absPath = realpath($this->getParameter('kernel.project_dir') . '/' . $file);
 
         $email = (new Email())
             ->from('testai70test@gmail.com')
@@ -43,10 +40,5 @@ class EmailController extends AbstractController
         try {
             $this->mailer->send($email);
         } catch (TransportExceptionInterface $e) {}
-
-        // wywalic po integracji z automatycznym wyslaniem
-        return $this->render('base.html.twig', [
-            'message' => 'email sent',
-        ]);
     }
 }
